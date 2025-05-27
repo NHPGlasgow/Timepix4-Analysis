@@ -35,3 +35,7 @@
 *.png
 *.pdf
 *.txt
+*.log
+
+# Linux backup files
+*~
