@@ -78,118 +78,179 @@ void BeamTestAnalysis() {
     
   for (size_t i = 0; i < timeSensor1->size(); i++) {
 
-  hColRow->Fill(colSensor1->at(i), rowSensor1->at(i));
+    hColRow->Fill(colSensor1->at(i), rowSensor1->at(i));
 
-  //Digi1 differences
-  for (size_t j = jStartDigi1; j < timeDigi1->size(); j++) {
-  // hColRow->Fill(colSensor->at(j), rowSensor->at(j));
-  long timeDiff = timeSensor1->at(i) - timeDigi1->at(j);
-  if(timeDiff > timeLimMax) {
-  jStartDigi1 = j;
-  continue;
-}
-  if(timeDiff < timeLimMin) {
-  break;
-}
-  hTimeDiffDigi1->Fill(timeDiff);
-  hTW1->Fill(totSensor1->at(i), timeDiff);
-  // hColRow->Fill(colSensor1->at(i), rowSensor1->at(i));
+    //Digi1 differences
+    for (size_t j = jStartDigi1; j < timeDigi1->size(); j++) {
+      // hColRow->Fill(colSensor->at(j), rowSensor->at(j));
+      long timeDiff = timeSensor1->at(i) - timeDigi1->at(j);
+      if(timeDiff > timeLimMax) {
+	jStartDigi1 = j;
+	continue;
+      }
+      if(timeDiff < timeLimMin) {
+	break;
+      }
+      hTimeDiffDigi1->Fill(timeDiff);
+      hTW1->Fill(totSensor1->at(i), timeDiff);
+      // hColRow->Fill(colSensor1->at(i), rowSensor1->at(i));
 
-  if (timeDiff >timeWinMin && timeDiff < timeWinMax) {
-  hColRowDigi1->Fill(colSensor1->at(i), rowSensor1->at(i));
-}
-}
+      if (timeDiff >timeWinMin && timeDiff < timeWinMax) {
+	hColRowDigi1->Fill(colSensor1->at(i), rowSensor1->at(i));
+      }
+    }
 
-  //Digi2 differences
-  for (size_t j = jStartDigi2; j < timeDigi2->size(); j++) {
-  long timeDiff = timeSensor1->at(i) - timeDigi2->at(j);
-  if(timeDiff > timeLimMax) {
-  jStartDigi2 = j;
-  continue;
-}
-  if(timeDiff < timeLimMin) {
-  break;
-}
-  hTimeDiffDigi2->Fill(timeDiff);
+    //Digi2 differences
+    for (size_t j = jStartDigi2; j < timeDigi2->size(); j++) {
+      long timeDiff = timeSensor1->at(i) - timeDigi2->at(j);
+      if(timeDiff > timeLimMax) {
+	jStartDigi2 = j;
+	continue;
+      }
+      if(timeDiff < timeLimMin) {
+	break;
+      }
+      hTimeDiffDigi2->Fill(timeDiff);
             
-  if (timeDiff >timeWinMin && timeDiff < timeWinMax) {
-  hColRowDigi2->Fill(colSensor1->at(i), rowSensor1->at(i));
-}
-}
+      if (timeDiff >timeWinMin && timeDiff < timeWinMax) {
+	hColRowDigi2->Fill(colSensor1->at(i), rowSensor1->at(i));
+      }
+    }
 
-  //Sensor2 differences
-  for (size_t j = jStartSensor2; j < timeSensor2->size(); j++) {
-  long timeDiff = timeSensor1->at(i) - timeSensor2->at(j);
-  if(timeDiff > timeLimMax) {
-  jStartSensor2 = j;
-  continue;
-}
-  if(timeDiff < timeLimMin) {
-  break;
-}
-  hTimeDiffSensor->Fill(timeDiff);
-  hTimeDiffSensor2->Fill(timeDiff);
-  int collDiff = colSensor1->at(i) - colSensor2->at(j);
-  int rowDiff = rowSensor1->at(i) - rowSensor2->at(j);
-  int xdiff = xpos1->at(i) - xpos2->at(j);
-  int ydiff = ypos1->at(i) - ypos2->at(j);
-  hColRowDiff->Fill(collDiff, rowDiff);
-  if (timeDiff >timeWinMin && timeDiff < timeWinMax) {
-  hColRowDiffSignal->Fill(collDiff, rowDiff);
-  //hdxSensor->Fill(xdiff);
-  //hdySensor->Fill(ydiff);
-  hdxSensor->Fill(collDiff);
-  hdySensor->Fill(rowDiff);
+    //Sensor2 differences
+    for (size_t j = jStartSensor2; j < timeSensor2->size(); j++) {
+      long timeDiff = timeSensor1->at(i) - timeSensor2->at(j);
+      if(timeDiff > timeLimMax) {
+	jStartSensor2 = j;
+	continue;
+      }
+      if(timeDiff < timeLimMin) {
+	break;
+      }
+      hTimeDiffSensor->Fill(timeDiff);
+      hTimeDiffSensor2->Fill(timeDiff);
+      int collDiff = colSensor1->at(i) - colSensor2->at(j);
+      int rowDiff = rowSensor1->at(i) - rowSensor2->at(j);
+      int xdiff = xpos1->at(i) - xpos2->at(j);
+      int ydiff = ypos1->at(i) - ypos2->at(j);
+      hColRowDiff->Fill(collDiff, rowDiff);
+      if (timeDiff >timeWinMin && timeDiff < timeWinMax) {
+	hColRowDiffSignal->Fill(collDiff, rowDiff);
+	//hdxSensor->Fill(xdiff);
+	//hdySensor->Fill(ydiff);
+	hdxSensor->Fill(collDiff);
+	hdySensor->Fill(rowDiff);
 	      
-}
-}
-}
+      }
+    }
+  }
     
   gStyle->SetOptStat(0);
-    
-  //Save the histograms to a root file
-  TFile *f = new TFile("TimeDifferences1.root", "RECREATE");
-  hTimeDiffDigi1->Write();
-  hTimeDiffDigi2->Write();
-  hTimeDiffSensor2->Write();
-  hColRow->Write();
-  hColRowDigi1->Write();
-  hColRowDigi2->Write();
-  hColRowDiff->Write();
-  hColRowDiffSignal->Write();
-  f->Close();
+  //Angus Start
+  // --- Timewalk Correction using (ToA_sensor - ToA_digital) ---
+  std::vector<double> timewalkOffsets, totMatched;
+  long matchWindow = 100; // ns
+  size_t jStart = 0;
 
-  TCanvas c("c", "c", 1500, 500);
-  c.Divide(3, 1);
-  c.cd(1);
+  // Match sensor hits to digital triggers
+  for (size_t i = 0; i < timeSensor1->size(); ++i) {
+    double toa_sensor = timeSensor1->at(i);
+    double tot = totSensor1->at(i);
+
+    for (size_t j = jStart; j < timeDigi1->size(); ++j) {
+      double toa_digi = timeDigi1->at(j);
+      double diff = toa_sensor - toa_digi;
+
+      if (diff > matchWindow) {
+	jStart = j;
+	continue;
+      }
+      if (diff < -matchWindow) break;
+
+      timewalkOffsets.push_back(diff);
+      totMatched.push_back(tot);
+      break;
+    }
+  }
+
+  std::cout << "Matched events: " << timewalkOffsets.size() << std::endl;
+
+  // --- Step 1: Timewalk vs ToT
+  TGraph* grTimewalk = new TGraph(timewalkOffsets.size());
+  for (size_t i = 0; i < timewalkOffsets.size(); ++i)
+    grTimewalk->SetPoint(i, totMatched[i], timewalkOffsets[i]);
+
+  grTimewalk->SetTitle("Timewalk vs ToT;ToT [ns];ToA - Digital Input [ns]");
+  grTimewalk->SetMarkerStyle(20);
+  grTimewalk->Draw();
+  
+  // --- Step 2: Fit with linear model
+  cout << "Fitting timewalk graph here" << endl;
+  TF1* fTW = new TF1("fTW", "[0] + [1]/pow(x, 0.5) +[2]/x",50, 600);
+  grTimewalk->Fit(fTW, "");  // Quiet mode
+
+  //double p0 = fTW->GetParameter(0);
+  //double p1 = fTW->GetParameter(1);
+  //std::cout << "Fit: p0 = " << p0 << ", p1 = " << p1 << std::endl;
+
+  // --- Step 3: Apply correction
+  std::vector<double> correctedOffsets;
+  for (size_t i = 0; i < timewalkOffsets.size(); ++i) {
+    double fitval = fTW->Eval(totMatched[i]);
+    correctedOffsets.push_back(timewalkOffsets[i] - fitval);
+  }
+
+
+
+  // --- Step 5: 2D Histogram of Corrected Timewalk
+  TH2F* hTW1Corrected = new TH2F("hTW1Corrected", "Corrected Timewalk;ToT [ns];(ToA - Digi) - Fit [ns]", 100, 0, 1000, 100, -100, 100);
+  for (size_t i = 0; i < correctedOffsets.size(); ++i)
+    hTW1Corrected->Fill(totMatched[i], correctedOffsets[i]);
+
+  // --- Step 6: Plot All
+
+
+  TCanvas* cTimewalk2D = new TCanvas("cTimewalk2D", "2D Timewalk Maps", 1600, 800);
+  cTimewalk2D->Divide(2, 1);
+  cTimewalk2D->cd(1); gPad->SetLeftMargin(0.15); hTW1->Draw("COLZ");
+  cTimewalk2D->cd(2); gPad->SetLeftMargin(0.15); hTW1Corrected->Draw("COLZ");
+  cTimewalk2D->Print("TimewalkCorrection_2D.png");
+  //Angus End
+
+  TCanvas *c00 = new TCanvas("c00", "c00", 1500, 500);
+  c00->Divide(3, 1);
+  c00->cd(1);
   hTimeDiffDigi1->Draw();
-  c.cd(2);
+  c00->cd(2);
   hTimeDiffDigi2->Draw();
-  c.cd(3);
+  c00->cd(3);
   hTimeDiffSensor2->Draw();
-  c.SaveAs("TimeDifferences1.png");
-    
-  TCanvas c2("c2", "c2", 1500, 500);
-  c2.Divide(3, 1);
-  c2.cd(1);
+  c00->Print("TimeDifferenc00es1.png");
+  c00->Close();
+  
+  TCanvas *c01 = new TCanvas("c01", "c01", 1500, 500);
+  c01->Divide(3, 1);
+  c01->cd(1);
   hColRow->Draw("colz");
-  c2.cd(2);
+  c01->cd(2);
   hColRowDigi1->Draw("colz");
-  c2.cd(3);
+  c01->cd(3);
   hColRowDigi2->Draw("colz");
-  c2.SaveAs("PositionCoincidences.png");
-    
-  TCanvas c3("c3", "c3", 1500, 500);
-  c3.Divide(2, 1);
-  c3.cd(1);
+  c01->Print("PositionCoincidences.png");
+  c01->Close();
+  
+  TCanvas *c02 = new TCanvas("c02", "c02", 1500, 500);
+  c02->Divide(2, 1);
+  c02->cd(1);
   hColRowDiff->Draw("colz");
-  c3.cd(2);
+  c02->cd(2);
   hColRowDiffSignal->Draw("colz");
-  c3.SaveAs("PositionDifferences.png");
-    
+  c02->Print("PositionDifferences.png");
+  c02->Close();
+  
   //for the workshop
-  TCanvas cnew("cnew","cnew",800,800);
-  cnew.cd();
+  TCanvas *c03 = new TCanvas("c03","c03",800,800);
+  c03->cd();
   double roughmean=hTimeDiffSensor->GetMean();
   double roughsig=hTimeDiffSensor->GetStdDev();
   TF1 *fcoinc = new TF1("fcoinc","gaus");
@@ -199,10 +260,10 @@ void BeamTestAnalysis() {
   tex.SetNDC(1);
   double tcoin_sig = fcoinc->GetParameter(2);
   tex.DrawLatex(0.2,0.8,Form("#sigma = %1.2f ns",tcoin_sig));
-  cnew.SaveAs("TimeRes.png");
+  c03->Print("TimeRes.png");
     
   gPad->Clear();
-  cnew.cd();
+  c03->cd();
   roughmean=hdxSensor->GetMean();
   roughsig=hdxSensor->GetStdDev();
   TF1 *fdx = new TF1("fdx","gaus");
@@ -211,10 +272,10 @@ void BeamTestAnalysis() {
   double dx_sig = fdx->GetParameter(2);
   dx_sig *= 55 * pow(10,-3);
   tex.DrawLatex(0.15,0.7,Form("#sigma = %1.2f mm",dx_sig));
-  cnew.SaveAs("xposRes.png");
+  c03->Print("xposRes.png");
     
   gPad->Clear();
-  cnew.cd();
+  c03->cd();
   roughmean=hdySensor->GetMean();
   roughsig=hdySensor->GetStdDev();
   TF1 *fdy = new TF1("fdy","gaus");
@@ -223,10 +284,37 @@ void BeamTestAnalysis() {
   double dy_sig = fdy->GetParameter(2);
   dy_sig *= 55 * pow(10,-3);
   tex.DrawLatex(0.15,0.7,Form("#sigma = %1.2f mm ",dy_sig));
-  cnew.SaveAs("yposRes.png");
+  c03->Print("yposRes.png");
+  c03->Close();
   
-  new TCanvas();
+  TCanvas *c04 = new TCanvas("c04","");
+  c04->cd();
   hTW1->Draw("colz");
+  c04->Close();
+  
+
+
+ 
+ 
+
+
+
+  //Save the histograms to a root file
+  //TFile *f = new TFile("TimeDifferences1.root", "RECREATE");
+  // hTimeDiffDigi1->Write();
+  // hTimeDiffDigi2->Write();
+  // hTimeDiffSensor2->Write();
+  // hColRow->Write();
+  // hColRowDigi1->Write();
+  // hColRowDigi2->Write();
+  // hColRowDiff->Write();
+  // hColRowDiffSignal->Write();
+  //f->cd();
+  //f->Write();
+  //f->Close();
+
+  
+  //gApplication->Run();
     
   // // Draw the histogram
   // TCanvas c(1000,1000);
@@ -237,5 +325,5 @@ void BeamTestAnalysis() {
   // hColRow->Draw("colz");
   // c.cd(3);
   // hColRowDigi->Draw("colz");
-  // c.SaveAs("TimeDifferences1.png");
+  // c.Print("TimeDifferences1.png");
 }
