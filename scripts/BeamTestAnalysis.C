@@ -3,9 +3,19 @@
 #include <TH1F.h>
 
 void BeamTestAnalysis() {
+
+  std::string datadir = "/scratch1/tpx4_config/data/trees/";
+  std::string file1 = "N200-260415-142101.root";
+  std::string file2 = "N55-260415-142106.root";
+  file2 = "N55-260415-150214.root";
+  file1 = "N200-260415-150214.root";
+  
+  file1 = datadir+file1;
+  file2 = datadir+file2;
+  
   // Create a ROOT DataFrame from a CSV file or a TTree
-  ROOT::RDataFrame df1("clusterTree", "/w/work5/eic/Timepix/MainzTests/trees/N55-250206-123249.root");
-  ROOT::RDataFrame df2("clusterTree", "/w/work5/eic/Timepix/MainzTests/trees/N200-250206-123235.root");
+  ROOT::RDataFrame df1("clusterTree", file1.c_str());
+  ROOT::RDataFrame df2("clusterTree", file2.c_str());
   
   auto df1_1000 = df1.Define("toa0", "toa[0]*(25.0/128.0)").Define("col0", "col[0]").Define("row0", "row[0]").Define("tot0", "tot[0]*25.0");
   auto df2_1000 = df2.Define("toa0", "toa[0]*(25.0/128.0)").Define("col0", "col[0]").Define("row0", "row[0]").Define("tot0", "tot[0]*25.0");
@@ -56,16 +66,16 @@ void BeamTestAnalysis() {
   int jStartDigi1 = 0;
   int jStartDigi2 = 0;
   int jStartSensor2 = 0;
-  long timeWinMin = -100;
-  long timeWinMax = 100;
-  long plotWinMin = -500;
-  long plotWinMax = 500;
-  long timeLimMin = -10000;
-  long timeLimMax = 10000;
+  long timeWinMin = -1.5e9;
+  long timeWinMax = 1.5e9;
+  long plotWinMin = -100;
+  long plotWinMax = 100;
+  long timeLimMin = -1.5e9;
+  long timeLimMax = 1.5e9;
 
-  TH1F *hTimeDiffDigi1   = new TH1F("hTimeDiffDigi1", "Chip1-Tagger Coincidence; t_{diff} [ns]", 400, plotWinMin, plotWinMax);
-  TH1F *hTimeDiffDigi2   = new TH1F("hTimeDiffDigi2", "Chip2-Tagger Coincidence; t_{diff} [ns]", 400, plotWinMin, plotWinMax);
-  TH1F *hTimeDiffSensor2 = new TH1F("hTimeDiffSensor2", "Chip1-Chip2 Coincidence; t_{diff} [ns]", 400, plotWinMin, plotWinMax);
+  TH1F *hTimeDiffDigi1   = new TH1F("hTimeDiffDigi1", "Chip1-Tagger Coincidence; t_{diff} [ns]", 100, plotWinMin, plotWinMax);
+  TH1F *hTimeDiffDigi2   = new TH1F("hTimeDiffDigi2", "Chip2-Tagger Coincidence; t_{diff} [ns]", 100, -1, -1);
+  TH1F *hTimeDiffSensor2 = new TH1F("hTimeDiffSensor2", "Chip1-Chip2 Coincidence; t_{diff} [ns]", 100, -1, -1);
     
   //for workshop
   TH1F *hTimeDiffSensor = new TH1F("hTimeDiffSensor", "Chip1-Chip2 Coincidence; t_{diff} [ns]", 100, -100, 100);
@@ -174,7 +184,7 @@ void BeamTestAnalysis() {
   }
 
   std::cout << "Matched events: " << timewalkOffsets.size() << std::endl;
-
+  
   // --- Step 1: Timewalk vs ToT
   TGraph* grTimewalk = new TGraph(timewalkOffsets.size());
   for (size_t i = 0; i < timewalkOffsets.size(); ++i)
@@ -225,8 +235,8 @@ void BeamTestAnalysis() {
   hTimeDiffDigi2->Draw();
   c00->cd(3);
   hTimeDiffSensor2->Draw();
-  c00->Print("TimeDifferenc00es1.png");
-  c00->Close();
+  c00->Print("TimeDifferences1.png");
+  //c00->Close();
   
   TCanvas *c01 = new TCanvas("c01", "c01", 1500, 500);
   c01->Divide(3, 1);
@@ -237,7 +247,7 @@ void BeamTestAnalysis() {
   c01->cd(3);
   hColRowDigi2->Draw("colz");
   c01->Print("PositionCoincidences.png");
-  c01->Close();
+  //c01->Close();
   
   TCanvas *c02 = new TCanvas("c02", "c02", 1500, 500);
   c02->Divide(2, 1);
@@ -246,7 +256,7 @@ void BeamTestAnalysis() {
   c02->cd(2);
   hColRowDiffSignal->Draw("colz");
   c02->Print("PositionDifferences.png");
-  c02->Close();
+  //c02->Close();
   
   //for the workshop
   TCanvas *c03 = new TCanvas("c03","c03",800,800);
@@ -262,8 +272,8 @@ void BeamTestAnalysis() {
   tex.DrawLatex(0.2,0.8,Form("#sigma = %1.2f ns",tcoin_sig));
   c03->Print("TimeRes.png");
     
-  gPad->Clear();
-  c03->cd();
+  TCanvas *c04 = new TCanvas("c04","c04",800,800);
+  c04->cd();
   roughmean=hdxSensor->GetMean();
   roughsig=hdxSensor->GetStdDev();
   TF1 *fdx = new TF1("fdx","gaus");
@@ -272,10 +282,11 @@ void BeamTestAnalysis() {
   double dx_sig = fdx->GetParameter(2);
   dx_sig *= 55 * pow(10,-3);
   tex.DrawLatex(0.15,0.7,Form("#sigma = %1.2f mm",dx_sig));
-  c03->Print("xposRes.png");
-    
-  gPad->Clear();
-  c03->cd();
+  c04->Print("xposRes.png");
+  //c04->Close();
+  
+  TCanvas *c05 = new TCanvas("c05","c05",800,800);
+  c05->cd();
   roughmean=hdySensor->GetMean();
   roughsig=hdySensor->GetStdDev();
   TF1 *fdy = new TF1("fdy","gaus");
@@ -284,13 +295,13 @@ void BeamTestAnalysis() {
   double dy_sig = fdy->GetParameter(2);
   dy_sig *= 55 * pow(10,-3);
   tex.DrawLatex(0.15,0.7,Form("#sigma = %1.2f mm ",dy_sig));
-  c03->Print("yposRes.png");
-  c03->Close();
+  c05->Print("yposRes.png");
+  //c05->Close();
   
-  TCanvas *c04 = new TCanvas("c04","");
-  c04->cd();
+  TCanvas *c06 = new TCanvas("c06","");
+  c06->cd();
   hTW1->Draw("colz");
-  c04->Close();
+  //c06->Close();
   
 
 
@@ -312,18 +323,4 @@ void BeamTestAnalysis() {
   //f->cd();
   //f->Write();
   //f->Close();
-
-  
-  //gApplication->Run();
-    
-  // // Draw the histogram
-  // TCanvas c(1000,1000);
-  // c.Divide(1, 3);
-  // c.cd(1);
-  // hTimeDiffs->Draw();
-  // c.cd(2);
-  // hColRow->Draw("colz");
-  // c.cd(3);
-  // hColRowDigi->Draw("colz");
-  // c.Print("TimeDifferences1.png");
 }
