@@ -144,7 +144,8 @@ void CompareRuns(){
   csummary->cd(4);
   ctoa_rate->DrawClonePad();
   
-
+  csummary->Print("scapa_data_600seconds_summary.png");
+  
   ctoa->Close();
   ctoa_rate->Close();
   ctot->Close();
