@@ -24,13 +24,11 @@ struct RunFile{
   }
 };
 
-void AnalyseRun(RunFile& f,
-		TFile* outfile)
+void AnalyseRun(RunFile& f, TFile* outfile)
 {
   
   ROOT::RDataFrame df_raw("clusterTree",f.filepath.c_str());
-  auto df_seconds = df_raw
-    .Define("toa_seconds", "toa[0]*25.0/(1e9*128.0)");
+  auto df_seconds = df_raw.Define("toa_seconds", "toa[0]*25.0/(1e9*128.0)");
     
   auto df = df_seconds.Filter("toa_seconds<590");
 
@@ -41,17 +39,17 @@ void AnalyseRun(RunFile& f,
   auto htoa = df.Histo1D({
       ("htoa_"+f.name).c_str(),
       (f.label+";Time [s];Hits / bin").c_str(),
-      250,0,600},"toa_seconds");
+      2500,0,600},"toa_seconds");
   
   auto htoa_rate = df.Histo1D({
       ("htoa_rate_"+f.name).c_str(),
       (f.label+";Time [s]; Rate [Hz]").c_str(),
-      250,0,600},"toa_seconds");
+      2500,0,600},"toa_seconds");
 
   auto htot = df.Histo1D({
       ("htot_"+f.name).c_str(),
       (f.label+";ToT [ns]; Hits / bin").c_str(),
-      250,0,40},"tot");
+      2500,0,40},"tot");
   
   auto hxy = df.Histo2D({
       ("hxy_"+f.name).c_str(),
@@ -71,6 +69,8 @@ void AnalyseRun(RunFile& f,
   f.htoa_rate->Write();
   f.htot->Write();
   f.hxy->Write();
+
+  return df;
 }
 
 // void DrawRuns(){
@@ -83,11 +83,22 @@ void CompareRuns(){
   TFile *fout = new TFile(outfilename.c_str(), "RECREATE");
   fout->cd();
   
-  RunFile n55_before("N55","N55-260415-142248.root","before","Before Shielding");
-  RunFile n55_after("N55","N55-260415-150214.root","after","After Shielding");
-  RunFile n55_wire1("N55","N55-260415-153211.root","wire1","Thin Wire");
-  RunFile n55_wire2("N55","N55-260415-155916.root","wire2","Thick Wire");
+  RunFile n55_before("N55","N55-260415-142248.root","N55_before","Before Shielding");
+  RunFile n55_after("N55","N55-260415-150214.root","N55_after","After Shielding");
+  RunFile n55_wire1("N55","N55-260415-153211.root","N55_wire1","Thin Wire");
+  RunFile n55_wire2("N55","N55-260415-155916.root","N55_wire2","Thick Wire");
+    
+  RunFile n200_before("N200","N200-260415-142234.root","N200_before","Before Shielding");
+  RunFile n200_after("N200","N200-260415-150214.root","N200_after","After Shielding");
+  RunFile n200_wire1("N200","N200-260415-153209.root","N200_wire1","Thin Wire");
+  RunFile n200_wire2("N200","N200-260415-155922.root","N200_wire2","Thick Wire");
 
+  //Time offset from N55 to N200 for each run (s)
+  auto toff_before = 13.3;
+  auto toff_after  = 0.2;
+  auto toff_wire1  = 3.5;
+  auto toff_wire2  = -6.5;
+  
   n55_before.color = kP6Red;
   n55_after.color = kP6Blue;
   n55_wire1.color = kP6Grape;
@@ -99,55 +110,113 @@ void CompareRuns(){
   runs55.push_back(n55_wire1);
   runs55.push_back(n55_wire2);
 
-  TCanvas *ctoa = new TCanvas();
-  TCanvas *ctoa_rate = new TCanvas();
-  TCanvas *ctot = new TCanvas();
-  TCanvas *cxy = new TCanvas();
-  cxy->Divide(2,2);
+  n200_before.color = kP6Red;
+  n200_after.color = kP6Blue;
+  n200_wire1.color = kP6Grape;
+  n200_wire2.color = kP6Yellow;
+  
+  std::vector<RunFile> runs200;
+  runs200.push_back(n200_before);
+  runs200.push_back(n200_after);
+  runs200.push_back(n200_wire1);
+  runs200.push_back(n200_wire2);
+
+  TCanvas *c55toa = new TCanvas();
+  TCanvas *c55toa_rate = new TCanvas();
+  TCanvas *c55tot = new TCanvas();
+  TCanvas *c55xy = new TCanvas();
+  c55xy->Divide(2,2);
+  
+  TCanvas *c200toa = new TCanvas();
+  TCanvas *c200toa_rate = new TCanvas();
+  TCanvas *c200tot = new TCanvas();
+  TCanvas *c200xy = new TCanvas();
+  c200xy->Divide(2,2);
   
   int iter=1;
   Option_t* drawopts = "hist";
   for(auto& f : runs55){
     AnalyseRun(f, fout);
     if(iter>1) drawopts = "hist same";
-    ctoa->cd();
+    c55toa->cd();
     f.htoa->DrawCopy(drawopts);
-    ctoa_rate->cd();
+    c55toa_rate->cd();
     f.htoa_rate->DrawCopy(drawopts);
-    ctot->cd();
+    c55tot->cd();
     f.htot->DrawCopy(drawopts);
-    cxy->cd(iter);
+    c55xy->cd(iter);
     f.hxy->Draw("colz");
     iter++;
   }
-   
+  iter=1;
+  drawopts = "hist";
+  for(auto& f : runs200){
+    AnalyseRun(f, fout);
+    if(iter>1) drawopts = "hist same";
+    c200toa->cd();
+    f.htoa->DrawCopy(drawopts);
+    c200toa_rate->cd();
+    f.htoa_rate->DrawCopy(drawopts);
+    c200tot->cd();
+    f.htot->DrawCopy(drawopts);
+    c200xy->cd(iter);
+    f.hxy->Draw("colz");
+    iter++;
+  }
+  
   float legx1 = 0.6; float legx2 = 0.85; float legy1 = 0.6; float legy2 = 0.85;
-  // ctoa->cd();
-  // gPad->BuildLegend(legx1, legy1, legx2, legy2);
-  // ctoa_rate->cd();
-  // gPad->BuildLegend(legx1, legy1, legx2, legy2);
-  ctot->cd();
+  c55tot->cd();
   gPad->BuildLegend(legx1, legy1, legx2, legy2);
   
-  TCanvas *csummary = new TCanvas("csummary","Summary",2000,1200);
-  csummary->Divide(2,2);
+  TCanvas *c55summary = new TCanvas("c55summary","N55 Summary",2000,1200);
+  c55summary->Divide(2,2);
   
-  csummary->cd(1);
-  ctot->DrawClonePad();
+  c55summary->cd(1);
+  c55tot->DrawClonePad();
 
-  csummary->cd(2);
-  cxy->DrawClonePad();
+  c55summary->cd(2);
+  c55xy->DrawClonePad();
   
-  csummary->cd(3);
-  ctoa->DrawClonePad();
+  c55summary->cd(3);
+  c55toa->DrawClonePad();
   
-  csummary->cd(4);
-  ctoa_rate->DrawClonePad();
+  c55summary->cd(4);
+  c55toa_rate->DrawClonePad();
   
-  csummary->Print("scapa_data_600seconds_summary.png");
+  c55summary->Print("scapa_data_600seconds_N55_summary.png");
   
-  ctoa->Close();
-  ctoa_rate->Close();
-  ctot->Close();
-  cxy->Close();
+  c55toa->Close();
+  c55toa_rate->Close();
+  c55tot->Close();
+  c55xy->Close();
+  
+  c200tot->cd();
+  gPad->BuildLegend(legx1, legy1, legx2, legy2);
+  
+  TCanvas *c200summary = new TCanvas("c200summary","N200 Summary",2000,1200);
+  c200summary->Divide(2,2);
+  
+  c200summary->cd(1);
+  c200tot->DrawClonePad();
+
+  c200summary->cd(2);
+  c200xy->DrawClonePad();
+  
+  c200summary->cd(3);
+  c200toa->DrawClonePad();
+  
+  c200summary->cd(4);
+  c200toa_rate->DrawClonePad();
+  
+  c200summary->Print("scapa_data_600seconds_N200_summary.png");
+  
+  c200toa->Close();
+  c200toa_rate->Close();
+  c200tot->Close();
+  c200xy->Close();
 }
+
+
+
+//std::vector<double> xpos_vec = df.Filter("mystring_getpulse").Take<double>("xpos");
+//maybe auto =
